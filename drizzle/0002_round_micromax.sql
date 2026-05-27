@@ -1,0 +1,20 @@
+CREATE TABLE `storm_simulations` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`simId` varchar(64) NOT NULL,
+	`name` varchar(128) NOT NULL,
+	`stormType` enum('hurricane','tropical_storm','tropical_depression','tornado','flood','nor_easter') NOT NULL DEFAULT 'hurricane',
+	`category` int DEFAULT 1,
+	`windSpeedKph` int DEFAULT 150,
+	`radiusKm` int DEFAULT 80,
+	`forwardSpeedKph` int DEFAULT 20,
+	`track` json NOT NULL,
+	`landfall` json,
+	`analysis` json,
+	`analysisText` text,
+	`affectedPopulation` int DEFAULT 0,
+	`status` enum('pending','analyzing','complete','error') NOT NULL DEFAULT 'pending',
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `storm_simulations_id` PRIMARY KEY(`id`),
+	CONSTRAINT `storm_simulations_simId_unique` UNIQUE(`simId`)
+);

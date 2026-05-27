@@ -1,0 +1,83 @@
+{
+  "registry_version": "3.0.0",
+  "system": "BayShield — Multi-Agent Disaster Response Coordinator",
+  "description": "Tampa Bay emergency response system using Google ADK agent patterns. 4 specialized agents coordinate in a pipeline to process real NOAA/NWS data and generate prioritized action plans.",
+  "pipeline": {
+    "pattern": "Sequential → Parallel → SelfCorrecting",
+    "total_agents": 4,
+    "stages": [
+      {
+        "stage": 1,
+        "pattern": "LoopAgent",
+        "agents": ["storm-watcher"],
+        "description": "Polls NOAA APIs in a loop until threat level stabilizes"
+      },
+      {
+        "stage": 2,
+        "pattern": "ParallelAgent",
+        "agents": ["vulnerability-mapper", "resource-coordinator"],
+        "description": "Both agents run concurrently via asyncio.gather() — cuts latency in half"
+      },
+      {
+        "stage": 3,
+        "pattern": "SelfCorrectingLoopAgent",
+        "agents": ["alert-commander"],
+        "description": "Generates and self-corrects action plans in a validation loop"
+      }
+    ]
+  },
+  "agents": [
+    {
+      "id": "storm-watcher",
+      "name": "Storm Watcher",
+      "pattern": "LoopAgent",
+      "card": "./storm-watcher.json",
+      "url": "http://localhost:8000/agents/storm-watcher",
+      "icon": "🌀",
+      "color": "#06B6D4"
+    },
+    {
+      "id": "vulnerability-mapper",
+      "name": "Vulnerability Mapper",
+      "pattern": "ParallelAgent",
+      "card": "./vulnerability-mapper.json",
+      "url": "http://localhost:8000/agents/vulnerability-mapper",
+      "icon": "🗺️",
+      "color": "#10B981"
+    },
+    {
+      "id": "resource-coordinator",
+      "name": "Resource Coordinator",
+      "pattern": "ParallelAgent",
+      "card": "./resource-coordinator.json",
+      "url": "http://localhost:8000/agents/resource-coordinator",
+      "icon": "📦",
+      "color": "#F59E0B"
+    },
+    {
+      "id": "alert-commander",
+      "name": "Alert Commander",
+      "pattern": "SelfCorrectingLoopAgent",
+      "card": "./alert-commander.json",
+      "url": "http://localhost:8000/agents/alert-commander",
+      "icon": "🚨",
+      "color": "#EF4444"
+    }
+  ],
+  "data_transparency": {
+    "live_data_sources": [
+      "NOAA NWS API — KTPA weather observations",
+      "NOAA NWS API — Active alerts for Florida",
+      "NOAA NHC RSS — Atlantic storm tracking"
+    ],
+    "deterministic_data": [
+      "FEMA FIRM flood zone classifications (VE/AE/X)",
+      "CDC Social Vulnerability Index (Hillsborough/Pinellas counties)",
+      "Risk score computation formula"
+    ],
+    "estimated_data": [
+      "Shelter occupancy — Florida Shelter Status System not publicly accessible"
+    ],
+    "labeling_policy": "All data sources are labeled in UI and API responses as LIVE, DETERMINISTIC, or ESTIMATED"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1774763400999,
+      "tag": "0000_purple_red_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774763996985,
+      "tag": "0001_secret_molten_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774766239874,
+      "tag": "0002_round_micromax",
+      "breakpoints": true
+    }
+  ]
+}

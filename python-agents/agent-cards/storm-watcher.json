@@ -1,0 +1,123 @@
+{
+  "name": "Storm Watcher",
+  "description": "LoopAgent that continuously polls NOAA/NWS APIs to monitor Tampa Bay weather threats, track NHC storms, and escalate threat levels. Runs in a continuous loop with configurable polling intervals.",
+  "version": "3.0.0",
+  "url": "http://localhost:8000/agents/storm-watcher",
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "skills": [
+    {
+      "id": "fetch-ktpa-observations",
+      "name": "Fetch KTPA Weather Observations",
+      "description": "Fetches live weather observations from Tampa International Airport (KTPA) via NWS API. Returns temperature, wind speed/direction, pressure, and conditions.",
+      "tags": ["weather", "noaa", "ktpa", "live-data"],
+      "examples": [
+        "What are the current wind conditions at Tampa Bay?",
+        "Fetch latest KTPA weather station data",
+        "Get current temperature and pressure at Tampa International"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "fetch-nws-alerts",
+      "name": "Fetch NWS Active Alerts",
+      "description": "Retrieves active National Weather Service alerts for Tampa Bay counties (Hillsborough, Pinellas, Pasco, Manatee). Filters for Tampa Bay-specific alerts.",
+      "tags": ["alerts", "nws", "tampa-bay", "live-data"],
+      "examples": [
+        "Are there any active weather alerts for Tampa Bay?",
+        "Get current NWS warnings for Hillsborough County",
+        "Check for hurricane warnings in the Tampa Bay area"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "fetch-nhc-storms",
+      "name": "Track NHC Active Storms",
+      "description": "Monitors the NHC Atlantic RSS feed for active tropical systems. Computes distance from Tampa Bay using Haversine formula and determines hurricane category.",
+      "tags": ["hurricane", "nhc", "storm-tracking", "live-data"],
+      "examples": [
+        "Are there any active hurricanes in the Atlantic?",
+        "How far is the nearest tropical storm from Tampa Bay?",
+        "Track Hurricane Helena's position and intensity"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "compute-threat-level",
+      "name": "Compute Threat Level",
+      "description": "Deterministically computes threat level (NONE/MONITORING/WATCH/WARNING/CRITICAL) from NOAA data. Uses storm distance, NWS alert severity, and KTPA wind speed thresholds.",
+      "tags": ["threat-assessment", "deterministic", "classification"],
+      "examples": [
+        "What is the current threat level for Tampa Bay?",
+        "Assess storm threat based on current NOAA data",
+        "Determine if evacuation orders are needed"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "agent_pattern": "LoopAgent",
+  "loop_config": {
+    "max_iterations": 4,
+    "poll_interval_ms": 100,
+    "termination_condition": "threat_level_stable_for_2_iterations",
+    "escalation_threshold": "WATCH"
+  },
+  "data_sources": [
+    {
+      "name": "KTPA Weather Station",
+      "url": "https://api.weather.gov/stations/KTPA/observations/latest",
+      "type": "REST",
+      "update_frequency": "hourly",
+      "output_type": "live"
+    },
+    {
+      "name": "NWS Active Alerts",
+      "url": "https://api.weather.gov/alerts/active?area=FL",
+      "type": "REST",
+      "update_frequency": "real-time",
+      "output_type": "live"
+    },
+    {
+      "name": "NHC Atlantic RSS",
+      "url": "https://www.nhc.noaa.gov/nhc_at1.xml",
+      "type": "RSS",
+      "update_frequency": "every 6 hours",
+      "output_type": "live"
+    }
+  ],
+  "a2a_messages": {
+    "sends": [
+      {
+        "event_type": "STATUS",
+        "to": "orchestrator",
+        "description": "Loop iteration status with current threat level and weather data"
+      },
+      {
+        "event_type": "ALERT",
+        "to": "vulnerability-mapper",
+        "description": "Escalation notification when threat level increases"
+      },
+      {
+        "event_type": "DATA",
+        "to": "vulnerability-mapper",
+        "description": "Final weather data package for parallel analysis"
+      }
+    ],
+    "receives": []
+  },
+  "output_types": {
+    "threat_level": "deterministic",
+    "weather_observation": "live",
+    "storm_tracking": "live",
+    "alert_count": "live"
+  }
+}

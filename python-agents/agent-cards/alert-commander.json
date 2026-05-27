@@ -1,0 +1,98 @@
+{
+  "name": "Alert Commander",
+  "description": "SelfCorrectingLoopAgent that synthesizes zone vulnerability data and shelter resources to generate prioritized action plans. Runs a self-correction loop that detects and fixes issues like capacity overflows, missing shelter assignments, and population mismatches.",
+  "version": "3.0.0",
+  "url": "http://localhost:8000/agents/alert-commander",
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "skills": [
+    {
+      "id": "generate-action-plans",
+      "name": "Generate Prioritized Action Plans",
+      "description": "Generates prioritized evacuation and shelter-in-place action plans by matching high-risk zones to available shelters. Plans are sorted by priority (1=critical) and include population counts, shelter assignments, and evacuation routes.",
+      "tags": ["action-plans", "evacuation", "prioritization", "deterministic"],
+      "examples": [
+        "Generate evacuation plans for Tampa Bay zones",
+        "Which zones need immediate evacuation orders?",
+        "Create shelter assignment plans for 58,000 at-risk residents"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "self-correct-plans",
+      "name": "Self-Correct Action Plans",
+      "description": "Validates generated plans against constraints: shelter capacity limits, population-to-shelter ratios, and missing assignments. Applies corrections when issues are detected and records correction details for transparency.",
+      "tags": ["self-correction", "validation", "quality-assurance"],
+      "examples": [
+        "Verify shelter capacity is not exceeded",
+        "Check that all high-risk zones have shelter assignments",
+        "Validate evacuation route feasibility"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "issue-final-command",
+      "name": "Issue Final Emergency Command",
+      "description": "Emits the final COMMAND message to Emergency Management with the complete action plan set, threat level, and self-correction status. This is the terminal output of the 4-agent pipeline.",
+      "tags": ["command", "emergency-management", "final-output"],
+      "examples": [
+        "Issue evacuation orders for critical zones",
+        "Send final action plans to emergency management",
+        "Broadcast shelter activation commands"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "agent_pattern": "SelfCorrectingLoopAgent",
+  "loop_config": {
+    "max_iterations": 3,
+    "correction_triggers": [
+      "shelter_capacity_exceeded",
+      "missing_shelter_assignment",
+      "population_mismatch"
+    ],
+    "termination_condition": "all_plans_valid OR max_iterations_reached",
+    "correction_label": "Applied to affected plans only — correction details logged"
+  },
+  "a2a_messages": {
+    "sends": [
+      {
+        "event_type": "COMMAND",
+        "to": "emergency-management",
+        "description": "Final prioritized action plans with self-correction status and threat level"
+      }
+    ],
+    "receives": [
+      {
+        "event_type": "DATA",
+        "from": "vulnerability-mapper",
+        "description": "Zone risk scores, high-risk zones, and total population at risk"
+      },
+      {
+        "event_type": "DATA",
+        "from": "resource-coordinator",
+        "description": "Shelter availability, capacity, and occupancy data"
+      }
+    ]
+  },
+  "output_types": {
+    "action_plans": "deterministic",
+    "self_correction_applied": "deterministic",
+    "correction_details": "deterministic",
+    "final_command": "deterministic"
+  },
+  "self_correction_transparency": {
+    "correction_logged": true,
+    "correction_visible_in_ui": true,
+    "correction_details_in_payload": true,
+    "affected_plans_labeled": true
+  }
+}

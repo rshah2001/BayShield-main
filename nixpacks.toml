@@ -1,0 +1,18 @@
+[variables]
+NODE_ENV = "production"
+
+[phases.setup]
+aptPkgs = ["python3", "python3-pip"]
+
+[phases.install]
+cmds = [
+  "corepack enable",
+  "pnpm install --frozen-lockfile",
+  "python3 -m pip install --break-system-packages -r python-agents/requirements.txt"
+]
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "pnpm start"

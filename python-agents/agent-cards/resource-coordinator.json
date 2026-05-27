@@ -1,0 +1,102 @@
+{
+  "name": "Resource Coordinator",
+  "description": "ParallelAgent that identifies available emergency shelters, estimates occupancy based on threat level, and computes available capacity. Runs concurrently with Vulnerability Mapper. Shelter occupancy is clearly labeled as 'estimated' since Florida Shelter Status System is not publicly accessible.",
+  "version": "3.0.0",
+  "url": "http://localhost:8000/agents/resource-coordinator",
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "skills": [
+    {
+      "id": "estimate-shelter-occupancy",
+      "name": "Estimate Shelter Occupancy",
+      "description": "Estimates shelter occupancy from threat-level occupancy rates (NONE: 2%, MONITORING: 5%, WATCH: 15%, WARNING: 40%, CRITICAL: 75%). Clearly labeled as 'estimated' — Florida Shelter Status System (FLSHELTER) is not publicly accessible.",
+      "tags": ["shelters", "capacity", "estimated", "labeled"],
+      "examples": [
+        "How many shelter beds are available in Tampa Bay?",
+        "What is the current shelter occupancy rate?",
+        "Which shelter has the most available capacity?"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "compute-available-capacity",
+      "name": "Compute Available Capacity",
+      "description": "Computes available beds per shelter and total system capacity. Returns shelter status (open/standby) based on threat level.",
+      "tags": ["capacity-planning", "logistics"],
+      "examples": [
+        "What is the total shelter capacity for Tampa Bay?",
+        "Which shelters are currently open?",
+        "How many more people can the shelter system accommodate?"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "agent_pattern": "ParallelAgent",
+  "parallel_config": {
+    "runs_with": "vulnerability-mapper",
+    "trigger": "storm-watcher-complete",
+    "data_dependency": "threat_level from Storm Watcher"
+  },
+  "shelters_managed": [
+    {
+      "id": "shelter-1",
+      "name": "USF Sun Dome",
+      "address": "4202 E Fowler Ave, Tampa",
+      "capacity": 12000,
+      "lat": 28.0622,
+      "lng": -82.4135
+    },
+    {
+      "id": "shelter-2",
+      "name": "Yuengling Center",
+      "address": "4202 E Fowler Ave, Tampa",
+      "capacity": 11000,
+      "lat": 28.0597,
+      "lng": -82.4153
+    },
+    {
+      "id": "shelter-3",
+      "name": "Tropicana Field",
+      "address": "1 Tropicana Dr, St. Petersburg",
+      "capacity": 7000,
+      "lat": 27.7683,
+      "lng": -82.6534
+    }
+  ],
+  "data_transparency": {
+    "shelter_occupancy": {
+      "source": "estimated",
+      "reason": "Florida Shelter Status System (FLSHELTER) is not publicly accessible via API",
+      "method": "Threat-level occupancy rates based on historical hurricane response patterns",
+      "label_in_ui": "ESTIMATED"
+    }
+  },
+  "a2a_messages": {
+    "sends": [
+      {
+        "event_type": "DATA",
+        "to": "alert-commander",
+        "description": "Shelter status, capacity, and availability data for action plan generation"
+      }
+    ],
+    "receives": [
+      {
+        "event_type": "DATA",
+        "from": "storm-watcher",
+        "description": "Threat level to compute shelter occupancy estimates"
+      }
+    ]
+  },
+  "output_types": {
+    "shelter_capacity": "deterministic",
+    "shelter_occupancy": "estimated",
+    "available_capacity": "deterministic"
+  }
+}
